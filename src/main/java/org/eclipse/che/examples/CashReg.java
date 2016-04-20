@@ -57,21 +57,35 @@ public class CashReg {
     private static void restock(){
         
         DRAWER.restock(10);
-        displayBalance();
+        displayBillCounts();
     }
     
     private static void withdraw(String cmdLine){
         
-        println("Doing withdraw");
+        
+        println(String.format("Current balance is: $%1$d", DRAWER.getBalance()));
     }
     
     private static void inquiry(String cmdLine){
-        println("Doing inquiry");
-    }
-    
-    private static void displayBalance(){
         
-        Map<CashDrawer.Denominations, Integer> balance = DRAWER.getBalance();
+        Pattern pat = Pattern.compile("\\s");
+        String [] tokens = pat.split(cmdLine);
+        
+        Map<CashDrawer.Denominations, Integer> balance = DRAWER.getBillCounts();
+        
+        for(String tokes : tokens){
+            CashDrawer.Denominations den = CashDrawer.Denominations.get(tokes);
+            if(null == den){
+                continue;
+            }
+            
+            println(String.format("%1$s - %2$d", den.getDescription(), balance.get(den)));
+        }
+    }
+  
+    private static void displayBillCounts(){
+        
+        Map<CashDrawer.Denominations, Integer> balance = DRAWER.getBillCounts();
         for(Entry<CashDrawer.Denominations, Integer> entry : balance.entrySet()){
             CashDrawer.Denominations den = (CashDrawer.Denominations) entry.getKey();
             println(String.format("%1$s - %2$d", den.getDescription(), entry.getValue()));
