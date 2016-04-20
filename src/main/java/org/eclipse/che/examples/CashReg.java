@@ -18,14 +18,14 @@ public class CashReg {
             }),
         WITHDRAW(
             "W|w <dollar amount> \t- Withdraws that amount from the cash machine (e.g. \"W $145\") ",
-            "^W$",
+            "^W\\s\\$[0-9]+$",
             (String cmdLine)->{
                 withdraw(cmdLine);
             }),
         INQUIRY( 
             "I|i <denominations> \t- Displays the number of bills in that " + 
             "denomination present in the cash machine (e.g. I $20 $10 $1) ",
-            "^I$",
+            "^I(\\s\\$(100|50|20|10|5|1))+$",
             (String cmdLine)->{
                 inquiry(cmdLine);
             }),
