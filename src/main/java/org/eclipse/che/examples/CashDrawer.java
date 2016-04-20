@@ -15,8 +15,8 @@ public class CashDrawer {
         FIVES(5),
         ONES(1);
         
-        public final long value;
-        private Denominations(long value){
+        public final int value;
+        private Denominations(int value){
             this.value = value;
         }
         
@@ -38,7 +38,7 @@ public class CashDrawer {
         }
     }
     
-    private final EnumMap<Denominations, Integer> ledger = new EnumMap<Denominations, Integer>(Denominations.class);
+    private final EnumMap<Denominations, Integer> drawer = new EnumMap<Denominations, Integer>(Denominations.class);
     
     public CashDrawer(int billCount){
         restock(billCount);
@@ -46,13 +46,18 @@ public class CashDrawer {
     
     public Map<Denominations, Integer> getBillCounts(){
         
-        return ledger.clone();
+        return drawer.clone();
     }
 
     public int getBalance(){
         
+        return totalLedger(drawer);
+    }
+    
+    private int totalLedger(Map<Denominations, Integer> totalLedger){
+        
         int ret = 0;
-        for(Entry<Denominations, Integer> entry : ledger.entrySet()){
+        for(Entry<Denominations, Integer> entry : totalLedger.entrySet()){
            ret += entry.getKey().value * entry.getValue(); 
         }
         
@@ -62,7 +67,59 @@ public class CashDrawer {
     public void restock(int billCount){
         
         for(Denominations den : EnumSet.allOf(Denominations.class)){
-            ledger.put(den, billCount);
+            drawer.put(den, billCount);
+        }
+    }
+    
+    private int withdrawDenomination(int amount, Denominations den, Map<Denominations, Integer> withdrawalLedger){
+        
+        if(amount < den.value){
+            return amount;
+        }
+        
+        int billCount = Integer.min(amount/den.value, drawer.get(den));
+        withdrawalLedger.put(den, billCount);
+        
+        return amount - billCount*den.value;
+    }
+    
+    public boolean withdraw(int amount){
+        
+        int balance = getBalance();
+        if(amount > balance){
+            return false;
+        }
+        
+        if(amount == balance){
+            
+            restock(0);
+            return true;
+        }
+        
+        int tally = amount;
+        Map<Denominations, Integer> withdrawalLedger = new EnumMap<Denominations, Integer>(Denominations.class);
+        
+        for(Denominations den : EnumSet.allOf(Denominations.class)){
+            tally = withdrawDenomination(tally, den, withdrawalLedger);            
+        }
+        
+        int ledgerTotal = totalLedger(withdrawalLedger);
+        if(ledgerTotal == amount){
+            removeBills(withdrawalLedger);
+            return true;
+        }
+                
+        return false;
+    }
+    
+    private void removeBills(Map<Denominations, Integer> withdrawalLedger){
+        
+        for(Entry<Denominations, Integer> entry : withdrawalLedger.entrySet()){
+            
+            Denominations den = entry.getKey();
+            int billsInDrawer = drawer.get(den);
+            int billsToRemove = entry.getValue();
+            drawer.put(den, billsInDrawer - billsToRemove);
         }
     }
 }
