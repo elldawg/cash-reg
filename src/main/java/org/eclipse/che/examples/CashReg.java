@@ -2,6 +2,7 @@ package org.eclipse.che.examples;
 
 import java.io.Console;
 import java.util.EnumSet;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class CashReg {
@@ -9,22 +10,35 @@ public class CashReg {
     private enum Commands {
         RESTOCK(
             "R|r \t\t\t- Restocks the cash machine to the original pre-stock levels",
-            "^R$"),
+            "^R$",
+            (String cmdLine)->{
+                restock();
+            }),
         WITHDRAW(
             "W|w <dollar amount> \t- Withdraws that amount from the cash machine (e.g. \"W $145\") ",
-            "^W$"),
-        CHECK_DENOMINATIONS( 
+            "^W$",
+            (String cmdLine)->{
+                withdraw(cmdLine);
+            }),
+        INQUIRY( 
             "I|i <denominations> \t- Displays the number of bills in that " + 
             "denomination present in the cash machine (e.g. I $20 $10 $1) ",
-            "^I$"),
+            "^I$",
+            (String cmdLine)->{
+                inquiry(cmdLine);
+            }),
         QUIT("Q|q \t\t\t- Quits the application",
-            "^Q$");
+            "^Q$",
+            (String cmdLine)->{
+            });
         
         public final String description;
         public final String patternString;
-        private Commands(String description, String patternString){
+        public final Consumer<String> action;
+        private Commands(String description, String patternString, Consumer<String> action){
             this.description = description;
             this.patternString = patternString;
+            this.action = action;
         }
         
         public boolean matches(String matchString){
@@ -32,6 +46,19 @@ public class CashReg {
             return Pattern.matches(this.patternString, matchString);
         }
 
+    }
+    
+    private static void restock(){
+        println("Doing restock");
+    }
+    
+    private static void withdraw(String cmdLine){
+        
+        println("Doing withdraw");
+    }
+    
+    private static void inquiry(String cmdLine){
+        println("Doing inquiry");
     }
     
     private static final EnumSet<Commands> cmdSet = EnumSet.allOf(Commands.class);
@@ -55,7 +82,7 @@ public class CashReg {
         for(Commands cmd: cmdSet){
             if(cmd.matches(cmdStr)){
                 matched = true;
-                println(cmd.description);
+                cmd.action.accept(cmdStr);
                 
                 if(cmd.equals(Commands.QUIT)){
                     keepRunning = false;
@@ -66,7 +93,7 @@ public class CashReg {
         }
         
         if(!matched){
-            println(String.format("Unrecognized command: %1$s", cmdStr));
+            println(String.format("Invalid command: %1$s", cmdStr));
         }
         
         return keepRunning;
