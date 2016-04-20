@@ -2,8 +2,10 @@ package org.eclipse.che.examples;
 
 import java.io.Console;
 import java.util.EnumSet;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.Map;
 
 public class CashReg {
     
@@ -48,8 +50,14 @@ public class CashReg {
 
     }
     
+    private static final EnumSet<Commands> cmdSet = EnumSet.allOf(Commands.class);
+    private static final Console con = System.console();   
+    private static final CashDrawer DRAWER = new CashDrawer(10);
+    
     private static void restock(){
-        println("Doing restock");
+        
+        DRAWER.restock(10);
+        displayBalance();
     }
     
     private static void withdraw(String cmdLine){
@@ -61,8 +69,14 @@ public class CashReg {
         println("Doing inquiry");
     }
     
-    private static final EnumSet<Commands> cmdSet = EnumSet.allOf(Commands.class);
-    private static final Console con = System.console();
+    private static void displayBalance(){
+        
+        Map<CashDrawer.Denominations, Integer> balance = DRAWER.getBalance();
+        for(Entry<CashDrawer.Denominations, Integer> entry : balance.entrySet()){
+            CashDrawer.Denominations den = (CashDrawer.Denominations) entry.getKey();
+            println(String.format("%1$s - %2$d", den.getDescription(), entry.getValue()));
+        }
+    }
     
     public static void main(String[] argvs) {
         System.out.println("Welcome to Command-Line Cash Machine");
